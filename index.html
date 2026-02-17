@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Daily Planner - Todo List</title>
+  <title>Daily Planner</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -32,77 +32,146 @@
     </div>
   </header>
 
-  <main>
+  <!-- View Tabs -->
+  <nav class="view-tabs">
+    <button class="view-tab active" data-view="tasks">&#9998; Tasks</button>
+    <button class="view-tab" data-view="calendar">&#128197; Calendar</button>
+  </nav>
 
-    <!-- Add Todo Form -->
-    <section class="card add-form-card">
-      <h2>Add New Task</h2>
-      <form id="add-form">
-        <div class="form-row">
-          <input
-            type="text"
-            id="todo-title"
-            placeholder="What needs to be done?"
-            autocomplete="off"
-            required
-          />
+  <!-- Tasks View -->
+  <div id="view-tasks">
+    <main>
+
+      <!-- Add Todo Form -->
+      <section class="card add-form-card">
+        <h2>Add New Task</h2>
+        <form id="add-form">
+          <div class="form-row">
+            <input
+              type="text"
+              id="todo-title"
+              placeholder="What needs to be done?"
+              autocomplete="off"
+              required
+            />
+          </div>
+          <div class="form-row form-row-grid">
+            <select id="todo-category">
+              <option value="Work">Work</option>
+              <option value="Personal">Personal</option>
+              <option value="Shopping">Shopping</option>
+              <option value="Health">Health</option>
+              <option value="Other">Other</option>
+            </select>
+            <select id="todo-priority">
+              <option value="High">High Priority</option>
+              <option value="Medium" selected>Medium Priority</option>
+              <option value="Low">Low Priority</option>
+            </select>
+            <input type="date" id="todo-due" />
+            <button type="submit" class="btn btn-primary">+ Add Task</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Filters -->
+      <section class="filters-section">
+        <div class="filter-tabs">
+          <button class="filter-tab active" data-status="all">All</button>
+          <button class="filter-tab" data-status="active">Active</button>
+          <button class="filter-tab" data-status="completed">Completed</button>
         </div>
-        <div class="form-row form-row-grid">
-          <select id="todo-category">
+        <div class="filter-dropdowns">
+          <select id="filter-priority">
+            <option value="all">All Priorities</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+          <select id="filter-category">
+            <option value="all">All Categories</option>
             <option value="Work">Work</option>
             <option value="Personal">Personal</option>
             <option value="Shopping">Shopping</option>
             <option value="Health">Health</option>
             <option value="Other">Other</option>
           </select>
-          <select id="todo-priority">
-            <option value="High">High Priority</option>
-            <option value="Medium" selected>Medium Priority</option>
-            <option value="Low">Low Priority</option>
-          </select>
-          <input type="date" id="todo-due" />
-          <button type="submit" class="btn btn-primary">+ Add Task</button>
         </div>
-      </form>
-    </section>
+      </section>
 
-    <!-- Filters -->
-    <section class="filters-section">
-      <div class="filter-tabs">
-        <button class="filter-tab active" data-status="all">All</button>
-        <button class="filter-tab" data-status="active">Active</button>
-        <button class="filter-tab" data-status="completed">Completed</button>
+      <!-- Todo List -->
+      <section id="todo-list" class="todo-list">
+        <!-- Rendered by JS -->
+      </section>
+
+      <div id="empty-state" class="empty-state hidden">
+        <p>&#128197; No tasks found. Add one above!</p>
       </div>
-      <div class="filter-dropdowns">
-        <select id="filter-priority">
-          <option value="all">All Priorities</option>
-          <option value="High">High</option>
-          <option value="Medium">Medium</option>
-          <option value="Low">Low</option>
-        </select>
-        <select id="filter-category">
-          <option value="all">All Categories</option>
-          <option value="Work">Work</option>
-          <option value="Personal">Personal</option>
-          <option value="Shopping">Shopping</option>
-          <option value="Health">Health</option>
-          <option value="Other">Other</option>
-        </select>
+
+    </main>
+  </div>
+
+  <!-- Calendar View -->
+  <div id="view-calendar" class="hidden">
+    <div class="cal-main">
+      <div class="calendar-layout">
+
+        <!-- Calendar Panel -->
+        <div class="calendar-panel card">
+          <div class="cal-header">
+            <button class="cal-nav-btn" id="cal-prev">&#8592;</button>
+            <h2 id="cal-month-label"></h2>
+            <button class="cal-nav-btn" id="cal-next">&#8594;</button>
+          </div>
+          <div class="cal-weekdays">
+            <span>Sun</span><span>Mon</span><span>Tue</span>
+            <span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="cal-sidebar">
+
+          <!-- Events for selected day -->
+          <div class="sidebar-section card">
+            <div class="sidebar-section-header">
+              <h3 id="cal-day-label">Select a day</h3>
+              <button class="btn btn-primary btn-sm" id="add-event-btn">+ Event</button>
+            </div>
+            <div id="cal-day-events">
+              <p class="sidebar-empty">Click a day to see events.</p>
+            </div>
+          </div>
+
+          <!-- Upcoming Todos -->
+          <div class="sidebar-section card">
+            <div class="sidebar-section-header">
+              <h3>Upcoming Tasks <span class="sidebar-subtitle">(next 7 days)</span></h3>
+            </div>
+            <div id="cal-upcoming">
+              <p class="sidebar-empty">No tasks due in the next 7 days.</p>
+            </div>
+          </div>
+
+          <!-- Pinned Reminders -->
+          <div class="sidebar-section card">
+            <div class="sidebar-section-header">
+              <h3>&#128204; Pinned Reminders</h3>
+            </div>
+            <div id="cal-reminders"></div>
+            <div class="reminder-add-row">
+              <input type="text" id="reminder-input" placeholder="Add a reminder..." autocomplete="off" />
+              <button class="btn btn-primary btn-sm" id="add-reminder-btn">Add</button>
+            </div>
+          </div>
+
+        </div>
       </div>
-    </section>
-
-    <!-- Todo List -->
-    <section id="todo-list" class="todo-list">
-      <!-- Rendered by JS -->
-    </section>
-
-    <div id="empty-state" class="empty-state hidden">
-      <p>&#128197; No tasks found. Add one above!</p>
     </div>
+  </div>
 
-  </main>
-
-  <!-- Edit Modal -->
+  <!-- Edit Todo Modal -->
   <div id="edit-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal">
       <div class="modal-header">
@@ -149,9 +218,9 @@
   <div id="delete-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
     <div class="modal modal-small">
       <div class="modal-header">
-        <h2>Delete Task?</h2>
+        <h2>Delete?</h2>
       </div>
-      <p class="confirm-text">Are you sure you want to delete this task? This cannot be undone.</p>
+      <p class="confirm-text">Are you sure you want to delete this? This cannot be undone.</p>
       <div class="modal-actions">
         <button type="button" class="btn btn-secondary" id="cancel-delete">Cancel</button>
         <button type="button" class="btn btn-danger" id="confirm-delete">Delete</button>
@@ -159,6 +228,70 @@
     </div>
   </div>
 
+  <!-- Event Modal -->
+  <div id="event-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="event-modal-title">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="event-modal-title">Add Event</h2>
+        <button class="modal-close" id="event-modal-close" aria-label="Close">&times;</button>
+      </div>
+      <form id="event-form">
+        <input type="hidden" id="event-id" />
+        <div class="form-row">
+          <label for="event-title">Title</label>
+          <input type="text" id="event-title" required placeholder="Event title" />
+        </div>
+        <div class="form-row">
+          <label for="event-date">Date</label>
+          <input type="date" id="event-date" required />
+        </div>
+        <div class="form-row form-row-time">
+          <div>
+            <label for="event-start">Start Time</label>
+            <input type="time" id="event-start" />
+          </div>
+          <div>
+            <label for="event-end">End Time</label>
+            <input type="time" id="event-end" />
+          </div>
+        </div>
+        <div class="form-row">
+          <label for="event-desc">Description</label>
+          <textarea id="event-desc" rows="2" placeholder="Optional notes..."></textarea>
+        </div>
+        <div class="form-row">
+          <label>Color</label>
+          <div class="color-picker">
+            <label class="color-swatch"><input type="radio" name="event-color" value="blue" checked /><span style="background:#3b82f6"></span></label>
+            <label class="color-swatch"><input type="radio" name="event-color" value="green" /><span style="background:#22c55e"></span></label>
+            <label class="color-swatch"><input type="radio" name="event-color" value="red" /><span style="background:#ef4444"></span></label>
+            <label class="color-swatch"><input type="radio" name="event-color" value="orange" /><span style="background:#f97316"></span></label>
+            <label class="color-swatch"><input type="radio" name="event-color" value="purple" /><span style="background:#8b5cf6"></span></label>
+          </div>
+        </div>
+        <div class="form-row">
+          <label for="event-recurrence">Repeat</label>
+          <select id="event-recurrence">
+            <option value="none">Does not repeat</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="yearly">Yearly</option>
+          </select>
+        </div>
+        <div class="form-row" id="recurrence-end-row" style="display:none">
+          <label for="event-recurrence-end">Repeat until (optional)</label>
+          <input type="date" id="event-recurrence-end" />
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="cancel-event">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Event</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="app.js"></script>
+  <script src="calendar.js"></script>
 </body>
 </html>

@@ -12,10 +12,14 @@ function loadTodos() {
   } catch {
     todos = [];
   }
+  window.todos = todos;
 }
 
 function saveTodos() {
   localStorage.setItem('daily-planner-todos', JSON.stringify(todos));
+  window.todos = todos;
+  // Refresh calendar upcoming panel if calendar is loaded
+  if (typeof renderUpcomingTodos === 'function') renderUpcomingTodos();
 }
 
 // ===== CRUD =====
@@ -107,37 +111,56 @@ function renderTodos() {
   }
 
   empty.classList.add('hidden');
-  list.innerHTML = filtered.map(todo => buildTodoHTML(todo)).join('');
+  list.innerHTML = `
+    <table class="todo-table">
+      <thead>
+        <tr>
+          <th class="col-check"></th>
+          <th class="col-title">Task</th>
+          <th class="col-category">Category</th>
+          <th class="col-priority">Priority</th>
+          <th class="col-due">Due Date</th>
+          <th class="col-actions">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filtered.map(todo => buildTodoHTML(todo)).join('')}
+      </tbody>
+    </table>
+  `;
 }
 
 function buildTodoHTML(todo) {
   const today = new Date().toISOString().slice(0, 10);
   const isOverdue = todo.dueDate && todo.dueDate < today && !todo.completed;
 
-  const dueBadge = todo.dueDate
-    ? `<span class="todo-due ${isOverdue ? 'overdue' : ''}">
-         ${isOverdue ? '&#9888; Overdue: ' : '&#128197; '}${formatDate(todo.dueDate)}
-       </span>`
-    : '';
+  const dueCell = todo.dueDate
+    ? `<span class="todo-due ${isOverdue ? 'overdue' : ''}">${isOverdue ? '&#9888; ' : '&#128197; '}${formatDate(todo.dueDate)}</span>`
+    : `<span class="no-date">&mdash;</span>`;
 
   return `
-    <div class="todo-item priority-${escHtml(todo.priority)} ${todo.completed ? 'completed' : ''}"
-         data-id="${todo.id}">
-      <div class="todo-check" role="checkbox" aria-checked="${todo.completed}"
-           aria-label="Toggle complete" onclick="toggleComplete(${todo.id})"></div>
-      <div class="todo-content">
-        <div class="todo-title">${escHtml(todo.title)}</div>
-        <div class="todo-meta">
-          <span class="badge badge-category">${escHtml(todo.category)}</span>
-          <span class="badge badge-${escHtml(todo.priority)}">${escHtml(todo.priority)}</span>
-          ${dueBadge}
+    <tr class="todo-row priority-${escHtml(todo.priority)} ${todo.completed ? 'completed' : ''}" data-id="${todo.id}">
+      <td class="col-check">
+        <div class="todo-check" role="checkbox" aria-checked="${todo.completed}"
+             aria-label="Toggle complete" onclick="toggleComplete(${todo.id})"></div>
+      </td>
+      <td class="col-title">
+        <span class="todo-title">${escHtml(todo.title)}</span>
+      </td>
+      <td class="col-category">
+        <span class="badge badge-category">${escHtml(todo.category)}</span>
+      </td>
+      <td class="col-priority">
+        <span class="badge badge-${escHtml(todo.priority)}">${escHtml(todo.priority)}</span>
+      </td>
+      <td class="col-due">${dueCell}</td>
+      <td class="col-actions">
+        <div class="todo-actions">
+          <button class="icon-btn" title="Edit" onclick="openEditModal(${todo.id})">&#9998;</button>
+          <button class="icon-btn delete-btn" title="Delete" onclick="openDeleteModal(${todo.id})">&#128465;</button>
         </div>
-      </div>
-      <div class="todo-actions">
-        <button class="icon-btn" title="Edit" onclick="openEditModal(${todo.id})">&#9998;</button>
-        <button class="icon-btn delete-btn" title="Delete" onclick="openDeleteModal(${todo.id})">&#128465;</button>
-      </div>
-    </div>
+      </td>
+    </tr>
   `;
 }
 
@@ -183,6 +206,7 @@ function openDeleteModal(id) {
 
 function closeDeleteModal() {
   pendingDeleteId = null;
+  window.calPendingDeleteEventId = null;
   document.getElementById('delete-modal').classList.add('hidden');
 }
 
@@ -231,6 +255,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (pendingDeleteId !== null) {
       deleteTodo(pendingDeleteId);
       closeDeleteModal();
+    } else if (window.calPendingDeleteEventId != null) {
+      if (typeof deleteCalEvent === 'function') deleteCalEvent(window.calPendingDeleteEventId);
+      closeDeleteModal();
     }
   });
 
@@ -269,6 +296,23 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Escape') {
       closeEditModal();
       closeDeleteModal();
+      if (typeof closeEventModal === 'function') closeEventModal();
     }
+  });
+
+  // View tab switching (Tasks <-> Calendar)
+  document.querySelectorAll('.view-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const view = tab.dataset.view;
+      document.getElementById('view-tasks').classList.toggle('hidden', view !== 'tasks');
+      document.getElementById('view-calendar').classList.toggle('hidden', view !== 'calendar');
+      if (view === 'calendar') {
+        if (typeof renderCalendar === 'function') renderCalendar();
+        if (typeof renderUpcomingTodos === 'function') renderUpcomingTodos();
+        if (typeof renderPinnedReminders === 'function') renderPinnedReminders();
+      }
+    });
   });
 });
